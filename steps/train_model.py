@@ -5,9 +5,13 @@ from zenml import step
 from src.model_dev import RandomForestClassifierModel
 from sklearn.base import ClassifierMixin
 from .config import ModelNameConfig
-from zenml.client import Client
 
-@step()
+from zenml.client import Client
+import mlflow
+
+experiment_tracker = Client().active_stack.experiment_tracker
+
+@step(experiment_tracker=experiment_tracker.name)
 def train_model(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -22,6 +26,7 @@ def train_model(
     """
     try:
         if config.model_name == 'RandomForestClassifier':
+            mlflow.sklearn.autolog()
             model = RandomForestClassifierModel()
             model = model.train(X_train, y_train)
             return model
